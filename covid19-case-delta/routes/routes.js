@@ -1,6 +1,7 @@
 const path = require("path");
 const router = require("express").Router();
 const db = require("../model/index");
+const request = require('supertest');
 
 const axios = require("axios");
 
@@ -9,9 +10,9 @@ router.get("/seed", function (req, res) {
   console.log("get route");
   axios.get("https://covid19-api.weedmark.systems/api/v1/stats?country=USA").then((response) => {
     console.log("axios fired");
-    console.log(response.data.data.covid19Stats);
-    db.USA.create(response.data.data.covid19Stats).then((response) => {
-      console.log(response);
+    let data = response.data.data.covid19Stats
+    db.USA.create(data).then((response) => {
+
       res.json(response);
     })
   });
@@ -20,11 +21,11 @@ router.get("/seed", function (req, res) {
 // update hourly, etc
 router.get("/update", function (req, res) {
   axios.get("https://covid19-api.weedmark.systems/api/v1/stats?country=USA").then((response) => {
-    console.log("axios fired");
+
     let data = response.data.data.covid19Stats
-    console.log(data);
+
     for (let i = 0; i < data.length; i++) {
-      console.log(data[i].province);
+
       db.USA.findOneAndUpdate(
         { province: data[i].province },
         { $push: { lastUpdate: data[i].lastUpdate, confirmed: data[i].confirmed, deaths: data[i].deaths, recovered: data[i].recovered } }
@@ -34,6 +35,28 @@ router.get("/update", function (req, res) {
     }
   });
 })
+
+setInterval(() => {
+  request(router)
+  .get('/update')
+  .expect('Content-Type', /json/)
+  .expect(200)
+  .end(function(err, res) {
+    if (err) throw err;
+    console.log(`test done`)
+  });
+}, 10000);
+
+let updater = () => {
+  request(router)
+  .get('/update')
+  .expect('Content-Type', /json/)
+  .expect(200)
+  .end(function(err, res) {
+    if (err) throw err;
+    console.log(`test done`)
+  });
+}
 
 // If no API routes are hit, send the React app
 
