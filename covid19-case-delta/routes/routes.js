@@ -2,20 +2,29 @@ const path = require("path");
 const router = require("express").Router();
 const db = require("../model/index");
 const request = require('supertest');
+var schedule = require('node-schedule');
 
 const axios = require("axios");
 
 // this would really only need to be run once during deployment
 router.get("/seed", function (req, res) {
-  console.log("get route");
-  axios.get("https://covid19-api.weedmark.systems/api/v1/stats?country=USA").then((response) => {
-    console.log("axios fired");
-    let data = response.data.data.covid19Stats
-    db.USA.create(data).then((response) => {
-
-      res.json(response);
-    })
-  });
+  db.USA.find({}).then((response) => {
+    console.log(`here's your generic find response ${response}`);
+    if (response.length > 0) {
+      //do nothing
+      console.log(`data is aleady here`);
+    }
+    else {
+      axios.get("https://covid19-api.weedmark.systems/api/v1/stats?country=USA").then((response) => {
+        console.log("axios fired");
+        let data = response.data.data.covid19Stats
+        db.USA.create(data).then((response) => {
+          res.json(response);
+        })
+      });
+    }
+    
+  })
 })
 
 // update hourly, etc
@@ -36,27 +45,21 @@ router.get("/update", function (req, res) {
   });
 })
 
-setInterval(() => {
-  request(router)
-  .get('/update')
-  .expect('Content-Type', /json/)
-  .expect(200)
-  .end(function(err, res) {
-    if (err) throw err;
-    console.log(`test done`)
-  });
-}, 10000);
-
 let updater = () => {
   request(router)
-  .get('/update')
-  .expect('Content-Type', /json/)
-  .expect(200)
-  .end(function(err, res) {
-    if (err) throw err;
-    console.log(`test done`)
-  });
+    .get('/update')
+    .expect('Content-Type', /json/)
+    .expect(200)
+    .end(function (err, res) {
+      if (err) throw err;
+      console.log(`test done`)
+    });
 }
+
+// runs updater at the top of every hour
+var j = schedule.scheduleJob('0 * * * *', function () {
+  updater();
+});
 
 // If no API routes are hit, send the React app
 

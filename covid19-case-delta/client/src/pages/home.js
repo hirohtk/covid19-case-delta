@@ -8,12 +8,11 @@ class Home extends React.Component {
 
     componentDidMount() {
         console.log("mounted");
-        this.getStats();
+        this.seed();
     }
 
-    getStats = () => {
-        console.log(`prior to axios`)
-        axios.get("/update").then(
+    seed = () => {
+        axios.get("/seed").then(
         (response) => {
             console.log(response)
         })
