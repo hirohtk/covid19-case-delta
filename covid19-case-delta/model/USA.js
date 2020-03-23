@@ -15,30 +15,30 @@ var USASchema = new Schema({
         required: true,
     },
 
-    lastUpdate: {
+    lastUpdate: [{
         type: String,
         required: true,
-    },
+    }],
 
-    confirmed: {
+    confirmed: [{
         type: String,
         required: true,
-    },
+    }],
 
-    deaths: {
+    deaths: [{
         type: String,
         required: true,
-    },
+    }],
 
-    recovered: {
+    recovered: [{
         type: String,
         required: true,
-    },
+    }],
 });
 
 
 // This creates our model from the above schema, using mongoose's model method
 //  this article is a Collection called "Users", defined by UsersSchema
-var Quotes = mongoose.model("USA", USASchema);
+var USA = mongoose.model("USA", USASchema);
 
-module.exports = Quotes;
+module.exports = USA;
