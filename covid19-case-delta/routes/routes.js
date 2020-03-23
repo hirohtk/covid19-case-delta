@@ -23,7 +23,6 @@ router.get("/seed", function (req, res) {
         })
       });
     }
-    
   })
 })
 
@@ -34,13 +33,22 @@ router.get("/update", function (req, res) {
     let data = response.data.data.covid19Stats
 
     for (let i = 0; i < data.length; i++) {
-
-      db.USA.findOneAndUpdate(
-        { province: data[i].province },
-        { $push: { lastUpdate: data[i].lastUpdate, confirmed: data[i].confirmed, deaths: data[i].deaths, recovered: data[i].recovered } }
-      ).then((response) => {
-        console.log(response);
-      })
+      db.USA.findOne({province: data[i].province}).then((response) => {
+        if (response.lastUpdate[response.lastUpdate.length - 1] === data[i].lastUpdate) {
+          // skip updating
+          console.log(`No new data.  Skipping update for ${data[i].province}`);
+        }
+        else {
+          //update with new data
+          db.USA.findOneAndUpdate(
+            { province: data[i].province },
+            { $push: { lastUpdate: data[i].lastUpdate, confirmed: data[i].confirmed, deaths: data[i].deaths, recovered: data[i].recovered } }
+          ).then((response) => {
+            console.log(`New data found for ${data[i].province}`);
+            console.log(response);
+          })
+        }
+      });
     }
   });
 })
